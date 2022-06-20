@@ -1,24 +1,21 @@
-import { View, StyleSheet, Image } from "react-native";
+import { View, StyleSheet, Image, Pressable } from "react-native";
 import Text from "./Text";
 import theme from "../theme";
+import { numberToString } from "../utils/util";
+import { useNavigate } from "react-router-native";
+import * as Linking from "expo-linking";
+import Button from "./Button";
+
 const styles = StyleSheet.create({
   flexContainer: {
-    display: "flex",
-    marginBottom: 5,
-    backgroundColor: theme.colors.defaultBackground,
-    padding: 5,
+    ...theme.defaultContainer,
   },
   flexTopRow: {
     flexGrow: 1,
     flexDirection: "row",
   },
   flexTopRowContent: {
-    flexDirection: "column",
-    marginLeft: 10,
-    marginRight: 10,
-    flexGrow: 1,
-    justifyContent: "space-between",
-    width: 0,
+    ...theme.contentContainer,
   },
   flexBottomRow: {
     flexGrow: 1,
@@ -42,18 +39,10 @@ const styles = StyleSheet.create({
     color: "white",
   },
   avatar: {
-    height: 45,
-    width: 45,
+    ...theme.avatarSize,
     borderRadius: 5,
   },
 });
-
-const numberToString = (num) => {
-  if (num < 1000) {
-    return num.toString();
-  }
-  return `${(Math.round(num / 100) / 10).toString()}k`;
-};
 
 const StatisticsText = ({ stat, text }) => {
   return (
@@ -66,15 +55,39 @@ const StatisticsText = ({ stat, text }) => {
   );
 };
 
-const RepositoryItem = ({ item }) => {
+const RepositoryItem = ({ style, item, singleView }) => {
+  const navigate = useNavigate();
+  const onPressName = () => {
+    navigate(`/repo/${item.id}`);
+  };
+  const handleGithubLink = async () => {
+    if (!item.url) {
+      console.error("Url missing from link");
+      return;
+    }
+    try {
+      await Linking.openURL(item.url);
+    } catch (ex) {
+      console.error(ex);
+    }
+  };
+  const containerStyle = {...styles.flexContainer, ...style};
   return (
-    <View style={styles.flexContainer}>
+    <View testID="repositoryItem" style={containerStyle}>
       <View style={styles.flexTopRow}>
-        <Image style={styles.avatar} source={{ uri: item.ownerAvatarUrl }} />
+        <Pressable disabled={singleView} onPress={onPressName}>
+          <Image
+            testID="repositoryItemImage"
+            style={styles.avatar}
+            source={{ uri: item.ownerAvatarUrl }}
+          />
+        </Pressable>
         <View style={styles.flexTopRowContent}>
-          <Text fontSize="subheading" fontWeight="bold">
-            {item.fullName}
-          </Text>
+          <Pressable disabled={singleView} onPress={onPressName}>
+            <Text fontSize="subheading" fontWeight="bold">
+              {item.fullName}
+            </Text>
+          </Pressable>
           <Text>{item.description}</Text>
           <View style={styles.languageTextContainer}>
             <Text style={styles.languageText}>{item.language}</Text>
@@ -87,6 +100,9 @@ const RepositoryItem = ({ item }) => {
         <StatisticsText stat={item.reviewCount} text="Reviews" />
         <StatisticsText stat={item.ratingAverage} text="Rating" />
       </View>
+      {singleView && (
+        <Button onPress={handleGithubLink} text="View on GitHub"/>
+      )}
     </View>
   );
 };

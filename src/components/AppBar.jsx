@@ -3,8 +3,7 @@ import Constants from "expo-constants";
 import Text from "./Text";
 import theme from "../theme";
 import { Link } from "react-router-native";
-import { useQuery } from "@apollo/client";
-import { GET_ME } from "../graphql/queries";
+import useCurrentUser from "../hooks/useCurrentUser";
 
 const styles = StyleSheet.create({
   container: {
@@ -30,14 +29,22 @@ const AppBarTab = ({ text, link }) => {
 };
 
 const AppBar = () => {
-  const { data, loading } = useQuery(GET_ME);
-  const me = loading || !data ? null : data.me;
+  const { user } = useCurrentUser();
   return (
     <View style={styles.container}>
       <ScrollView horizontal>
         <AppBarTab link="/" text="Repositories" />
-        {(me && <AppBarTab link="/signOut" text="Sign out" />) || (
-          <AppBarTab link="/signIn" text="Sign in" />
+        {(user && (
+          <>
+            <AppBarTab link="/review" text="Create a review" />
+            <AppBarTab link="/myReviews" text="My reviews" />
+            <AppBarTab link="/signOut" text="Sign out" />
+          </>
+        )) || (
+          <>
+            <AppBarTab link="/signIn" text="Sign in" />
+            <AppBarTab link="/signUp" text="Sign up" />
+          </>
         )}
       </ScrollView>
     </View>
